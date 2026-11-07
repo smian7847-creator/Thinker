@@ -3,8 +3,8 @@ import { THEME_BOOT } from '@/lib/theme';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'smallweb',
-  description: 'A browser for a small web of hand-written sites.',
+  title: 'Thinker',
+  description: 'Thinker: a browser for a small web of hand-written sites.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

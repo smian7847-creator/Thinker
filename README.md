@@ -1,4 +1,4 @@
-# smallweb
+# Thinker
 
 Node 20+. Four terminals, from the repo root.
 

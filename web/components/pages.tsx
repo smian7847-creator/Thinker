@@ -153,7 +153,7 @@ function NowherePage({ tab, snap }: { tab: Tab; snap: Of<'nowhere'> }) {
           <>
             <h1>This web has no outside</h1>
             <p>
-              <code>{snap.input}</code> is an address on the real internet. This browser only reaches the small web:
+              <code>{snap.input}</code> is an address on the real internet. Thinker only reaches its own web:
               addresses that end in <code>.zz</code>.
             </p>
           </>
@@ -188,7 +188,7 @@ function HomePage({ tab, entry }: PageProps) {
   const person = tab.people.find((p) => p.id === tab.personId);
   return (
     <Scroller tab={tab} entry={entry} ready={sites !== null}>
-      <h1 className="hello">The small web</h1>
+      <h1 className="hello">Thinker</h1>
       <p className="lede">
         {sites ? `${sites.length} sites, written by hand by strangers.` : 'Loading…'} You&apos;re browsing as{' '}
         <strong>{person?.name ?? tab.personId}</strong>
@@ -249,7 +249,7 @@ function SearchPage({ tab, entry, snap }: PageProps & { snap: Of<'search'> }) {
   return (
     <Scroller tab={tab} entry={entry}>
       <form className="searchbox" onSubmit={submit}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the small web" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search Thinker" />
         <button className="primary">Search</button>
       </form>
       <p className="muted">

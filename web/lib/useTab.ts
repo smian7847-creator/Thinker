@@ -345,7 +345,7 @@ export function useTab() {
   }, [personId]);
 
   useEffect(() => {
-    if (entry) document.title = `${titleOf(entry)} · smallweb`;
+    if (entry) document.title = `${titleOf(entry)} · Thinker`;
   }, [entry]);
 
   return {
