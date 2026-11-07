@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { PeopleController, PeopleService } from './people';
+import { rateLimit } from './ratelimit';
 import { SearchController, SearchService } from './search';
 import { SitesController, SitesService } from './sites';
 import { Store } from './store';
@@ -16,6 +17,8 @@ class AppModule {}
 async function main() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useBodyParser('json', { limit: '300kb' });
+  app.use('/sites', rateLimit('publishes', 10, 60_000));
+  app.use('/people', rateLimit('visits', 120, 60_000));
   app.enableShutdownHooks();
   const port = Number(process.env.PORT ?? 4100);
   await app.listen(port, '127.0.0.1');

@@ -21,6 +21,8 @@ export interface SiteDoc {
   text: string;
   currentRevisionId: string;
   revisionCount: number;
+  /** sha256 of the site's edit key; see editkeys.ts. */
+  editKeyHash: string;
   createdAt: Date;
   updatedAt: Date;
 }

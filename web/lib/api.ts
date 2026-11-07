@@ -1,5 +1,6 @@
 import type {
   Person,
+  Published,
   Revision,
   SearchResult,
   SiteSummary,
@@ -53,8 +54,8 @@ export const api = {
   revision: (id: string, signal?: AbortSignal) => call<Revision>(`/revisions/${enc(id)}`, { signal }),
   source: (id: string) => call<{ id: string; source: string }>(`/revisions/${enc(id)}/source`),
 
-  publish: (body: { address: string; title: string; html: string; authorId: string }) =>
-    call<Revision>('/sites', { method: 'POST', body: JSON.stringify(body) }),
+  publish: (body: { address: string; title: string; html: string; authorId: string; editKey?: string }) =>
+    call<Published>('/sites', { method: 'POST', body: JSON.stringify(body) }),
 
   search: (q: string, signal?: AbortSignal) => call<SearchResult>(`/search?q=${enc(q)}`, { signal }),
 
@@ -68,6 +69,31 @@ export const api = {
     body: { address: string; revisionId: string | null; via: Via; from: string | null },
   ) => call<Visit>(`/people/${enc(personId)}/visits`, { method: 'POST', body: JSON.stringify(body) }),
 };
+
+/**
+ * Edit keys for sites claimed from this browser. Our origin never runs code
+ * that people published (that lives in opaque-origin frames), so it is safe
+ * to keep them here. They are deliberately not kept in tab history.
+ */
+const EDIT_KEYS = 'smallweb:edit-keys';
+
+function editKeys(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(EDIT_KEYS) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+export function getEditKey(address: string): string | undefined {
+  return editKeys()[address];
+}
+
+export function saveEditKey(address: string, key: string) {
+  try {
+    localStorage.setItem(EDIT_KEYS, JSON.stringify({ ...editKeys(), [address]: key }));
+  } catch {}
+}
 
 /** Revisions never change, so once fetched they can be kept for the life of the tab. */
 const revisions = new Map<string, Revision>();

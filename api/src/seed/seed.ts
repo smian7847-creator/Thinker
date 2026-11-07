@@ -6,9 +6,12 @@
  * changes nothing and the same addresses always hold the same pages.
  */
 import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { ObjectId } from 'mongodb';
 import { collections, connect, ensureIndexes, MONGO_URL, RevisionDoc, SiteDoc, VisitDoc } from '../db';
 import { extractText, sanitize } from '../content';
+import { hashEditKey, newEditKey } from '../editkeys';
 import { PEOPLE } from './people';
 import { SITES } from './sites';
 import { linkGraph, rng, Step, walk } from './trails';
@@ -20,6 +23,24 @@ const DAY = 24 * 60 * 60 * 1000;
 
 function stableObjectId(key: string): ObjectId {
   return new ObjectId(createHash('sha1').update(`smallweb:${key}`).digest('hex').slice(0, 24));
+}
+
+// Edit keys are secrets, so they are random rather than derived from the seed,
+// and live next to the local database, outside git.
+const KEYS_FILE = resolve(__dirname, '..', '..', '..', '.data', 'edit-keys.json');
+
+function readKeys(reset: boolean): Record<string, string> {
+  if (reset || !existsSync(KEYS_FILE)) return {};
+  try {
+    return JSON.parse(readFileSync(KEYS_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function writeKeys(keys: Record<string, string>) {
+  mkdirSync(dirname(KEYS_FILE), { recursive: true });
+  writeFileSync(KEYS_FILE, JSON.stringify(keys, null, 2) + '\n');
 }
 
 function trails(): Step[] {
@@ -60,6 +81,7 @@ async function main() {
     for (const p of PEOPLE) await c.people.replaceOne({ _id: p._id }, p, { upsert: true });
 
     const current = new Map<string, RevisionDoc>();
+    const keys = readKeys(reset);
     for (const site of SITES) {
       const revs: RevisionDoc[] = site.revisions.map((r, i) => {
         const html = sanitize(r.html);
@@ -82,6 +104,13 @@ async function main() {
       // If someone has published newer revisions since seeding, leave the pointer on theirs.
       const existing = await c.sites.findOne({ _id: site.address });
       if (existing && existing.revisionCount > revs.length) continue;
+      // Keep a site's edit key across re-seeds; mint one the first time.
+      let editKeyHash = existing?.editKeyHash;
+      if (!editKeyHash) {
+        const key = newEditKey();
+        keys[site.address] = key;
+        editKeyHash = hashEditKey(key);
+      }
       const doc: SiteDoc = {
         _id: site.address,
         authorId: site.authorId,
@@ -89,11 +118,14 @@ async function main() {
         text: last.text,
         currentRevisionId: last._id,
         revisionCount: revs.length,
+        editKeyHash,
         createdAt: revs[0].createdAt,
         updatedAt: last.createdAt,
       };
       await c.sites.replaceOne({ _id: site.address }, doc, { upsert: true });
     }
+
+    writeKeys(keys);
 
     const steps = trails();
     const perPerson = new Map<string, number>();
@@ -126,6 +158,7 @@ async function main() {
     console.log(`  people ${people}, sites ${sites}, revisions ${revisions}, visits ${visits}`);
     console.log(`  this seed: ${steps.length} visits (${nowhere} to nowhere); ada has seen ${adaSites.size}/${SITES.length} sites`);
     for (const [p, n] of perPerson) console.log(`    ${p.padEnd(7)} ${n}`);
+    console.log(`  edit keys for seeded sites: ${KEYS_FILE}`);
   } finally {
     await client.close();
   }

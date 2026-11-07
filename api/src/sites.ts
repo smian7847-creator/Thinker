@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   ConflictException,
+  ForbiddenException,
   Controller,
   Get,
   Injectable,
@@ -9,9 +10,10 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { normalizeAddress, Revision, SiteSummary } from '@smallweb/shared';
+import { normalizeAddress, Published, Revision, SiteSummary } from '@smallweb/shared';
 import { RevisionDoc } from './db';
 import { extractText, MAX_SOURCE_BYTES, sanitize } from './content';
+import { editKeyMatches, hashEditKey, newEditKey } from './editkeys';
 import { Store } from './store';
 
 export interface PublishInput {
@@ -19,6 +21,7 @@ export interface PublishInput {
   title?: unknown;
   html?: unknown;
   authorId?: unknown;
+  editKey?: unknown;
 }
 
 @Injectable()
@@ -81,11 +84,12 @@ export class SitesService {
 
   /**
    * Publish a page. A free address is claimed by whoever publishes there
-   * first; after that only its author can publish to it again, and each time
-   * they do a new revision is added. Old revisions stay, so anyone who still
-   * has one open in their back history gets the page they left.
+   * first, and they get back the site's edit key. After that a new revision
+   * needs both the same author and that key: the name alone is only a claim.
+   * Old revisions stay, so anyone who still has one open in their back
+   * history gets the page they left.
    */
-  async publish(input: PublishInput): Promise<Revision> {
+  async publish(input: PublishInput): Promise<Published> {
     const address = typeof input.address === 'string' ? normalizeAddress(input.address) : null;
     if (!address) throw new BadRequestException('An address looks like name.zz: letters, digits and hyphens, ending in .zz');
     const title = typeof input.title === 'string' ? input.title.trim() : '';
@@ -103,6 +107,7 @@ export class SitesService {
     const { sites, revisions } = this.store.db;
 
     let n = 1;
+    let editKey: string | undefined = newEditKey();
     try {
       await sites.insertOne({
         _id: address,
@@ -111,22 +116,28 @@ export class SitesService {
         text,
         currentRevisionId: `${address}@1`,
         revisionCount: 1,
+        editKeyHash: hashEditKey(editKey),
         createdAt: now,
         updatedAt: now,
       });
     } catch (e) {
       if ((e as { code?: number }).code !== 11000) throw e;
-      // Taken. Only the author may add a revision; $inc hands out n atomically.
-      const updated = await sites.findOneAndUpdate(
-        { _id: address, authorId },
-        { $inc: { revisionCount: 1 }, $set: { title, text, updatedAt: now } },
-        { returnDocument: 'after' },
-      );
-      if (!updated) {
-        const owner = await sites.findOne({ _id: address });
+      editKey = undefined;
+      const owner = await sites.findOne({ _id: address });
+      if (!owner || owner.authorId !== authorId) {
         const ownerName = owner && (await this.store.db.people.findOne({ _id: owner.authorId }))?.name;
         throw new ConflictException(`${address} already belongs to ${ownerName ?? 'someone else'}`);
       }
+      if (!editKeyMatches(input.editKey, owner.editKeyHash)) {
+        throw new ForbiddenException(`Publishing a new revision of ${address} needs its edit key`);
+      }
+      // $inc hands out n atomically; matching the hash again closes the gap since the check.
+      const updated = await sites.findOneAndUpdate(
+        { _id: address, authorId, editKeyHash: owner.editKeyHash },
+        { $inc: { revisionCount: 1 }, $set: { title, text, updatedAt: now } },
+        { returnDocument: 'after' },
+      );
+      if (!updated) throw new ConflictException(`${address} changed hands while you were publishing`);
       n = updated.revisionCount;
     }
 
@@ -136,7 +147,10 @@ export class SitesService {
       // Point at the new revision only once it exists, and only if no later edit has landed meanwhile.
       await sites.updateOne({ _id: address, revisionCount: n }, { $set: { currentRevisionId: rev._id } });
     }
-    return this.toRevision(rev, author.name);
+    const published: Published = this.toRevision(rev, author.name);
+    // Shown once, to whoever claimed the address. The server only keeps its hash.
+    if (editKey) published.editKey = editKey;
+    return published;
   }
 }
 

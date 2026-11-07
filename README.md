@@ -12,6 +12,7 @@ npm run db        # local MongoDB on :27019, data in .data/ (skip if you set MON
 
 ```bash
 npm run seed      # idempotent; `npm run seed -- --reset` wipes the database first
+                  # seeded sites' edit keys are written to .data/edit-keys.json
 ```
 
 ```bash

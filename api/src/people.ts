@@ -74,8 +74,9 @@ export class PeopleService {
     if (!VIAS.includes(via)) throw new BadRequestException(`via must be one of ${VIAS.join(', ')}`);
     const from = typeof input.from === 'string' ? normalizeAddress(input.from) : null;
 
-    // Back, forward and history jumps show the revision the person had
-    // before, which may not be the current one. Anything else is current.
+    // Back and forward show the revision the person had before, which may
+    // not be the current one, so any real revision of this address is fine.
+    // A visit to nowhere has no revision; the server checks the claim.
     let revisionId: string | null = null;
     let title: string | null = null;
     if (typeof input.revisionId === 'string') {
@@ -83,6 +84,12 @@ export class PeopleService {
       if (!rev) throw new BadRequestException('that revision is not of that address');
       revisionId = rev._id;
       title = rev.title;
+    } else if (input.revisionId != null) {
+      throw new BadRequestException('revisionId is a revision id or null');
+    } else if (via !== 'back' && via !== 'forward' && (await this.store.db.sites.countDocuments({ _id: address }, { limit: 1 }))) {
+      // Going back may return to a "nowhere" that has since been published,
+      // but a fresh arrival at an address that exists did not lead nowhere.
+      throw new BadRequestException(`${address} exists; a fresh visit to it can't have led nowhere`);
     }
 
     const doc: VisitDoc = { _id: new ObjectId(), personId, address, revisionId, title, via, from, at: new Date() };

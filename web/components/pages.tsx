@@ -2,7 +2,7 @@
 
 import { FormEvent, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { about, normalizeAddress, parseHref, type Revision, type SiteSummary, type Visit } from '@smallweb/shared';
-import { api, ApiError, cachedRevision, loadRevision } from '@/lib/api';
+import { api, ApiError, cachedRevision, getEditKey, loadRevision, saveEditKey } from '@/lib/api';
 import type { Draft, Snapshot, TabEntry } from '@/lib/snapshot';
 import type { Tab } from '@/lib/useTab';
 import { PageFrame } from './PageFrame';
@@ -381,6 +381,9 @@ function PublishPage({ tab, entry, snap }: PageProps & { snap: Of<'publish'> }) 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Set when the address exists and belongs to the publisher: a new revision needs its edit key.
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editKey, setEditKey] = useState('');
   const save = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Keep the draft on the entry, so leaving and coming back finds it as it was.
@@ -398,6 +401,7 @@ function PublishPage({ tab, entry, snap }: PageProps & { snap: Of<'publish'> }) 
   // Arriving with an address: tell the publisher whose it is, and load it for editing if it's theirs.
   const address = normalizeAddress(draft.address);
   useEffect(() => {
+    setEditing(null);
     if (!address) return setStatus(null);
     let live = true;
     const t = setTimeout(async () => {
@@ -407,6 +411,8 @@ function PublishPage({ tab, entry, snap }: PageProps & { snap: Of<'publish'> }) 
       if (rev.authorId !== draft.authorId)
         return setStatus(`${address} belongs to ${rev.authorName}. Only they can publish there.`);
       setStatus(`Editing ${address}. Publishing adds revision ${rev.n + 1}; anyone with revision ${rev.n} in their back history keeps it.`);
+      setEditing(address);
+      setEditKey(getEditKey(address) ?? '');
       if (!draft.html && !draft.title) {
         const { source } = await api.source(rev.id);
         if (live) {
@@ -435,7 +441,14 @@ function PublishPage({ tab, entry, snap }: PageProps & { snap: Of<'publish'> }) 
     try {
       clearTimeout(save.current);
       tab.patchEntry(entry.key, { snapshot: { kind: 'publish', draft } });
-      const rev = await api.publish({ ...draft, html: draft.html || STARTER });
+      const rev = await api.publish({
+        ...draft,
+        html: draft.html || STARTER,
+        editKey: editing === address ? editKey.trim() : undefined,
+      });
+      // A fresh claim hands back the key; an accepted key is worth keeping too.
+      if (rev.editKey) saveEditKey(rev.address, rev.editKey);
+      else if (editing === address && editKey.trim()) saveEditKey(rev.address, editKey.trim());
       await tab.navigate({ kind: 'site', address: rev.address }, 'publish');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
@@ -449,7 +462,8 @@ function PublishPage({ tab, entry, snap }: PageProps & { snap: Of<'publish'> }) 
       <h1>Publish a site</h1>
       <p className="muted">
         An address and a page of HTML. Scripts, forms, embeds and images are removed when you publish; your CSS stays.
-        The preview runs in the same sandbox readers will see it in.
+        The preview runs in the same sandbox readers will see it in. Claiming an address gives this browser its edit
+        key; publishing there again needs it.
       </p>
       <form className="publish" onSubmit={submit}>
         <label>
@@ -474,6 +488,25 @@ function PublishPage({ tab, entry, snap }: PageProps & { snap: Of<'publish'> }) 
         </label>
         {draft.address && !address && <p className="warn">Addresses look like name.zz: letters, digits and hyphens.</p>}
         {status && <p className="note">{status}</p>}
+        {editing && editing === address && (
+          <label>
+            Edit key
+            <input
+              type="password"
+              value={editKey}
+              onChange={(e) => setEditKey(e.target.value)}
+              placeholder="The key handed out when this address was claimed"
+              autoComplete="off"
+              spellCheck={false}
+              required
+            />
+            <span className="hint">
+              {getEditKey(editing)
+                ? 'This browser kept the key when the site was published here.'
+                : 'Not saved in this browser. Seeded sites’ keys are in .data/edit-keys.json.'}
+            </span>
+          </label>
+        )}
         <label>
           Title
           <input value={draft.title} onChange={(e) => update({ title: e.target.value })} maxLength={120} required />

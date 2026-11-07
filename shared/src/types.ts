@@ -40,6 +40,11 @@ export interface Revision {
   createdAt: string;
 }
 
+/** What publishing returns. editKey is present only when the address was just claimed. */
+export interface Published extends Revision {
+  editKey?: string;
+}
+
 export interface Visit {
   id: string;
   personId: string;
