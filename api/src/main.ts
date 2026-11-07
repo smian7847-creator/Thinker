@@ -17,7 +17,7 @@ async function main() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useBodyParser('json', { limit: '300kb' });
   app.enableShutdownHooks();
-  const port = Number(process.env.PORT ?? 4000);
+  const port = Number(process.env.PORT ?? 4100);
   await app.listen(port, '127.0.0.1');
   console.log(`api listening on http://127.0.0.1:${port}`);
 }

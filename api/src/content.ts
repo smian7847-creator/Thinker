@@ -89,7 +89,7 @@ export function snippet(text: string, terms: string[], width = 200): string {
   if (!text) return '';
   let at = -1;
   for (const t of terms) {
-    const re = new RegExp(`\\b${stem(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+    const re = new RegExp(`\\b${stem(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:s|es|d|ed|ing)?\\b`, 'i');
     const m = re.exec(text);
     if (m && (at < 0 || m.index < at)) at = m.index;
   }
