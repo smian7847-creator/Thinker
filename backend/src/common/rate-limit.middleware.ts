@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { config } from '../config';
 
 /**
  * A fixed-window limit per client and route, kept in memory. It is enough to
@@ -30,13 +31,15 @@ export function rateLimit(name: string, limit: number, windowMs: number) {
   };
 }
 
-// The API listens on loopback only, so every caller is on this machine and
-// browsers arrive through the web server's proxy, which sets forwarded-for.
-// A local process could forge that header; nothing remote can reach us to.
+// Locally the API listens on loopback, so only the frontend's proxy (or
+// another local process) can set forwarded-for. Deployed behind a host's
+// proxy, TRUST_PROXY=1 says the header is set by infrastructure we trust.
 function clientOf(req: IncomingMessage): string {
   const remote = req.socket.remoteAddress ?? '';
   const loopback = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
   const forwarded = req.headers['x-forwarded-for'];
-  if (loopback && typeof forwarded === 'string' && forwarded) return forwarded.split(',')[0].trim();
+  if ((loopback || config.trustProxy) && typeof forwarded === 'string' && forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
   return remote;
 }

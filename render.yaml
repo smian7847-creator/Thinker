@@ -1,0 +1,22 @@
+# Render blueprint for the backend. The frontend deploys to Vercel separately
+# (root directory: frontend) with API_URL set to this service's URL.
+services:
+  - type: web
+    name: thinker-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build -w backend
+    startCommand: npm run start -w backend
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: "1"
+      # The local-dev MongoDB binary isn't needed on a host.
+      - key: MONGOMS_DISABLE_POSTINSTALL
+        value: "1"
+      # Your MongoDB Atlas connection string, entered in the Render dashboard.
+      - key: MONGO_URL
+        sync: false

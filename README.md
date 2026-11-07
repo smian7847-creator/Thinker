@@ -50,3 +50,10 @@ frontend/   Next.js browser:
   styles/              theme tokens, chrome, pages
 scripts/    local MongoDB runner
 ```
+
+## Deploy
+
+1. Create a free MongoDB Atlas cluster; allow access from anywhere (0.0.0.0/0) and copy its connection string.
+2. Seed it from your machine: `MONGO_URL="<atlas string>" npm run seed`
+3. Backend on Render: New → Blueprint → this repo (uses `render.yaml`); paste the Atlas string as `MONGO_URL`.
+4. Frontend on Vercel: root directory `frontend`, environment variable `API_URL=https://<your-render-service>.onrender.com`, then redeploy.

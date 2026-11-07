@@ -29,7 +29,8 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { 'content-type': 'application/json', ...init?.headers },
   });
   if (!res.ok) {
-    let message = res.statusText;
+    // HTTP/2 responses carry no status text, so fall back to the code.
+    let message = res.statusText || `HTTP ${res.status}`;
     try {
       const body = await res.json();
       message = Array.isArray(body.message) ? body.message.join(', ') : (body.message ?? message);
