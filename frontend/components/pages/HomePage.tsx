@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { SiteSummary } from '@thinker/shared';
 import { api } from '@/lib/api';
+import { Wordmark } from '../brand/Logo';
 import { Scroller } from './Scroller';
 import { SearchBox } from './SearchBox';
 import { SiteLink } from './SiteLink';
@@ -21,7 +22,9 @@ export function HomePage({ tab, entry }: PageProps) {
 
   return (
     <Scroller tab={tab} entry={entry} ready={sites !== null}>
-      <h1 className="hello">Thinker</h1>
+      <h1 className="hello" aria-label="Thinker">
+        <Wordmark size={36} />
+      </h1>
       <p className="lede">
         {sites ? `${sites.length} sites, written by hand by strangers.` : 'Loading…'} You&apos;re browsing as{' '}
         <strong>{person?.name ?? tab.personId}</strong>

@@ -2,6 +2,7 @@
 
 import { about, type AboutPage } from '@thinker/shared';
 import { useTab } from '@/hooks/useTab';
+import { LogoMark } from '../brand/Logo';
 import { Page } from '../pages/Page';
 import { AddressBar } from './AddressBar';
 import { NavButtons } from './NavButtons';
@@ -23,6 +24,9 @@ export function Browser() {
     <div className="browser">
       <header className="chrome">
         <div className="toolbar">
+          <button className="brand" onClick={() => tab.navigate(about('home'), 'typed')} title="Thinker: start page">
+            <LogoMark size={26} title="Thinker" />
+          </button>
           <NavButtons tab={tab} />
           <AddressBar tab={tab} />
           <div className="tools">

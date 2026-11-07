@@ -55,3 +55,14 @@
   .address { order: 3; flex-basis: 100%; }
   .tools { margin-left: auto; }
 }
+
+/* Brand: the trail mark, coloured by the theme's accent. */
+.brand {
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: none; border-radius: 10px; background: transparent; color: var(--accent); cursor: pointer;
+}
+.brand:hover { background: var(--accent-soft); }
+.logo-mark { display: block; flex: none; }
+.wordmark { display: inline-flex; align-items: center; gap: 0.3em; color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
+.wordmark .logo-mark { color: var(--accent); }
+.wordmark-tld { color: var(--muted); font-weight: 500; }
