@@ -53,7 +53,9 @@ scripts/    local MongoDB runner
 
 ## Deploy
 
-1. Create a free MongoDB Atlas cluster; allow access from anywhere (0.0.0.0/0) and copy its connection string.
+Both services deploy to Render from `render.yaml`, from the repo root (not a subfolder), so the shared package links.
+
+1. Create a free MongoDB Atlas cluster; allow access from anywhere (0.0.0.0/0) and copy its connection string, with `/thinker` as the database name.
 2. Seed it from your machine: `MONGO_URL="<atlas string>" npm run seed`
-3. Backend on Render: New → Blueprint → this repo (uses `render.yaml`); paste the Atlas string as `MONGO_URL`.
-4. Frontend on Vercel: root directory `frontend`, environment variable `API_URL=https://<your-render-service>.onrender.com`, then redeploy.
+3. Render: New → Blueprint → this repo. Set `MONGO_URL` on `thinker-api`, and `API_URL` on `thinker-web` to `thinker-api`'s URL (e.g. `https://thinker-api.onrender.com`, no trailing slash).
+4. If `thinker-web` built before `API_URL` was set, redeploy it: the `/api` proxy is fixed at build time.

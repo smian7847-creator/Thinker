@@ -1,5 +1,5 @@
-# Render blueprint for the backend. The frontend deploys to Vercel separately
-# (root directory: frontend) with API_URL set to this service's URL.
+# Render blueprint: the backend API and the frontend, both from the repo
+# root so npm workspaces can link the shared package.
 services:
   - type: web
     name: thinker-api
@@ -19,4 +19,20 @@ services:
         value: "1"
       # Your MongoDB Atlas connection string, entered in the Render dashboard.
       - key: MONGO_URL
+        sync: false
+
+  - type: web
+    name: thinker-web
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build -w frontend
+    startCommand: npm run serve -w frontend
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGOMS_DISABLE_POSTINSTALL
+        value: "1"
+      # The backend's public URL, e.g. https://thinker-api.onrender.com
+      # (no trailing slash). Read at build time: redeploy after changing it.
+      - key: API_URL
         sync: false

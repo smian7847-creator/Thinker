@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev -H 127.0.0.1 -p 3100",
     "build": "next build",
-    "start": "next start -H 127.0.0.1 -p 3100"
+    "start": "next start -H 127.0.0.1 -p 3100",
+    "serve": "next start"
   },
   "dependencies": {
     "@thinker/shared": "0.1.0",
