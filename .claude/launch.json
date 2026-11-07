@@ -1,7 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "api", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:api"], "port": 4100 },
-    { "name": "web", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:web"], "port": 3100 }
+    { "name": "backend", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:backend"], "port": 4100 },
+    { "name": "frontend", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:frontend"], "port": 3100 }
   ]
 }

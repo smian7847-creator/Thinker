@@ -1,16 +1,16 @@
 {
-  "name": "smallweb",
+  "name": "thinker",
   "private": true,
-  "workspaces": ["shared", "api", "web"],
+  "workspaces": ["shared", "backend", "frontend"],
   "devDependencies": {
     "mongodb-memory-server": "10.2.0"
   },
   "scripts": {
     "postinstall": "npm run build -w shared",
     "db": "node scripts/db.mjs",
-    "seed": "npm run seed -w api --",
-    "dev:api": "npm run dev -w api",
-    "dev:web": "npm run dev -w web",
-    "test": "npm test -w shared && npm test -w api"
+    "seed": "npm run seed -w backend --",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "test": "npm test -w shared && npm test -w backend"
   }
 }

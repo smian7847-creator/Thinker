@@ -1,0 +1,57 @@
+/* The browser's own chrome: toolbar, address bar, progress, errors. */
+
+.theme-toggle { font-size: 16px; line-height: 1; }
+
+.chrome { background: var(--chrome); border-bottom: 1px solid var(--chrome-border); flex: none; }
+.toolbar { display: flex; gap: 8px; align-items: center; padding: 8px 10px; }
+.nav-buttons { display: flex; gap: 2px; }
+.nav-buttons button {
+  width: 34px; height: 34px; border-radius: 50%; border: none; background: transparent;
+  font-size: 18px; cursor: pointer; line-height: 1;
+}
+.nav-buttons button:hover:not(:disabled) { background: var(--accent-soft); }
+.nav-buttons button:disabled { opacity: .3; cursor: default; }
+
+.address {
+  flex: 1; display: flex; align-items: center; min-width: 0;
+  background: var(--field); border: 1px solid var(--chrome-border); border-radius: 18px; height: 36px; padding: 0 4px;
+}
+.address:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.address input { flex: 1; border: none; outline: none; background: transparent; min-width: 0; padding: 0 8px; font-size: 15px; }
+.scheme {
+  flex: none; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px;
+  background: var(--accent-soft); color: var(--accent); letter-spacing: .05em;
+}
+.scheme.nowhere { background: var(--warn-soft); color: var(--warn); }
+.scheme.internal { background: transparent; color: var(--muted); font-size: 14px; }
+
+.tools { display: flex; gap: 4px; align-items: center; }
+.tools > button {
+  border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 6px 10px; cursor: pointer;
+}
+.tools > button:hover { background: var(--accent-soft); }
+.person {
+  display: flex; align-items: center; gap: 6px; padding: 4px 8px; margin-left: 4px;
+  border: 1px solid var(--chrome-border); border-radius: 18px; background: var(--field);
+}
+.person span { color: var(--good); font-size: 10px; }
+.person select { border: none; background: transparent; outline: none; cursor: pointer; }
+
+.progress { height: 2px; background: transparent; overflow: hidden; position: relative; }
+.progress.on::after {
+  content: ''; position: absolute; inset: 0; width: 40%; background: var(--accent);
+  animation: load 0.9s ease-in-out infinite;
+}
+@keyframes load { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+.errorbar {
+  display: flex; gap: 12px; align-items: center; justify-content: space-between;
+  padding: 6px 12px; background: var(--warn-soft); color: var(--warn); font-size: 14px;
+}
+.errorbar button { border: none; background: transparent; cursor: pointer; text-decoration: underline; color: inherit; }
+
+@media (max-width: 720px) {
+  .toolbar { flex-wrap: wrap; }
+  .address { order: 3; flex-basis: 100%; }
+  .tools { margin-left: auto; }
+}

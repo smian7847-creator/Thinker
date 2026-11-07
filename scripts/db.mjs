@@ -10,7 +10,7 @@ mkdirSync(dbPath, { recursive: true });
 const server = await MongoMemoryServer.create({
   instance: { port: 27019, ip: '127.0.0.1', dbPath, storageEngine: 'wiredTiger' },
 });
-console.log(`mongod running at ${server.getUri()}smallweb (data in .data/db). Ctrl+C to stop.`);
+console.log(`mongod running at ${server.getUri()}thinker (data in .data/db). Ctrl+C to stop.`);
 
 const stop = async () => {
   await server.stop({ doCleanup: false });

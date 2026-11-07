@@ -1,0 +1,64 @@
+/* Theme tokens (light, dark, and the system default) and element resets. */
+
+:root {
+  --bg: #e9ebef;
+  --chrome: #f6f7f9;
+  --chrome-border: #d5d8de;
+  --field: #ffffff;
+  --text: #1d2129;
+  --muted: #687080;
+  --accent: #2557d6;
+  --accent-soft: #e5ecfc;
+  --visited: #6b2fa3;
+  --warn: #b3261e;
+  --warn-soft: #fde7e5;
+  --good: #1e7a46;
+  --mark: #fff1a8;
+  color-scheme: light;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Dark follows the system unless someone picked light; picking dark forces it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #15171c;
+    --chrome: #1f2229;
+    --chrome-border: #343844;
+    --field: #2a2e37;
+    --text: #e7e9ee;
+    --muted: #9aa1b0;
+    --accent: #7ea2ff;
+    --accent-soft: #263255;
+    --visited: #c39af0;
+    --warn: #ff8a80;
+    --warn-soft: #3d1f1d;
+    --good: #6fd39b;
+    --mark: #5c4d00;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #15171c;
+  --chrome: #1f2229;
+  --chrome-border: #343844;
+  --field: #2a2e37;
+  --text: #e7e9ee;
+  --muted: #9aa1b0;
+  --accent: #7ea2ff;
+  --accent-soft: #263255;
+  --visited: #c39af0;
+  --warn: #ff8a80;
+  --warn-soft: #3d1f1d;
+  --good: #6fd39b;
+  --mark: #5c4d00;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.booting { display: grid; place-items: center; height: 100vh; color: var(--muted); }
+
+.browser { display: flex; flex-direction: column; height: 100vh; }
