@@ -2,11 +2,16 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { about, parseTyped } from '@smallweb/shared';
+import { Theme, useTheme } from '@/lib/theme';
 import { useTab } from '@/lib/useTab';
 import { Page } from './pages';
 
+const THEME_ICON: Record<Theme, string> = { system: '◐', light: '☀', dark: '☾' };
+const THEME_LABEL: Record<Theme, string> = { system: 'match system', light: 'light', dark: 'dark' };
+
 export function Browser() {
   const tab = useTab();
+  const theme = useTheme();
   const { entry, pending, people, personId } = tab;
   const [draft, setDraft] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -90,6 +95,14 @@ export function Browser() {
             </button>
             <button onClick={() => tab.navigate(about('publish'), 'typed')} title="Publish a site">
               Publish
+            </button>
+            <button
+              className="theme-toggle"
+              onClick={theme.cycle}
+              title={`Theme: ${THEME_LABEL[theme.theme]} (click to change)`}
+              aria-label={`Theme: ${THEME_LABEL[theme.theme]}`}
+            >
+              {THEME_ICON[theme.theme]}
             </button>
             <label className="person" title="Who is browsing">
               <span aria-hidden>●</span>
